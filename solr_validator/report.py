@@ -56,8 +56,8 @@ class ReportWriter:
         print(f"{'='*50}")
         print(f"  Documents compared:         {self.total_compared:>10,}")
         print(f"  Documents with field diffs: {len(self.field_diffs):>10,}")
-        print(f"  Missing in {target_label[:15]:<15} {len(self.missing_in_target):>10,}")
-        print(f"  Missing in {source_label[:15]:<15} {len(self.missing_in_source):>10,}")
+        print(f"  Missing in {target_label:<30} {len(self.missing_in_target):>10,}")
+        print(f"  Missing in {source_label:<30} {len(self.missing_in_source):>10,}")
         if elapsed_seconds is not None:
             h, rem = divmod(int(elapsed_seconds), 3600)
             m, s = divmod(rem, 60)
