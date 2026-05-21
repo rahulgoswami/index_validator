@@ -1,6 +1,6 @@
 import json
 import sys
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Set
 
 
 class ReportWriter:
@@ -10,9 +10,12 @@ class ReportWriter:
         self.missing_in_source: List[str] = []
         self.total_compared: int = 0
         self.schema_diff: Optional[Dict] = None
+        self.changed_fields: Set[str] = set()
 
     def add_field_diff(self, doc_id: str, diffs: List[Dict]) -> None:
         self.field_diffs.append({"id": doc_id, "diffs": diffs})
+        for d in diffs:
+            self.changed_fields.add(d["field"])
 
     def add_missing_in_target(self, doc_id: str) -> None:
         self.missing_in_target.append(doc_id)
@@ -28,6 +31,7 @@ class ReportWriter:
                 "docs_with_field_diffs": len(self.field_diffs),
                 "missing_in_target": len(self.missing_in_target),
                 "missing_in_source": len(self.missing_in_source),
+                "changed_fields": sorted(self.changed_fields),
             },
             "field_diffs": self.field_diffs,
             "missing_in_target": self.missing_in_target,
@@ -36,7 +40,12 @@ class ReportWriter:
         with open(path, "w") as fh:
             json.dump(report, fh, indent=2, default=str)
 
-    def print_summary(self, source_label: str = "source", target_label: str = "target") -> None:
+    def print_summary(
+        self,
+        source_label: str = "source",
+        target_label: str = "target",
+        elapsed_seconds: Optional[float] = None,
+    ) -> None:
         total_issues = (
             len(self.field_diffs)
             + len(self.missing_in_target)
@@ -49,6 +58,11 @@ class ReportWriter:
         print(f"  Documents with field diffs: {len(self.field_diffs):>10,}")
         print(f"  Missing in {target_label[:15]:<15} {len(self.missing_in_target):>10,}")
         print(f"  Missing in {source_label[:15]:<15} {len(self.missing_in_source):>10,}")
+        if elapsed_seconds is not None:
+            h, rem = divmod(int(elapsed_seconds), 3600)
+            m, s = divmod(rem, 60)
+            elapsed_str = f"{h}h {m}m {s}s" if h else f"{m}m {s}s" if m else f"{s}s"
+            print(f"  Time elapsed:               {elapsed_str:>10}")
         print(f"{'='*50}")
         if total_issues == 0:
             print("  RESULT: CLEAN — no discrepancies found")
@@ -71,6 +85,11 @@ class ReportWriter:
                         f"source type={m['source_type']!r}, "
                         f"target type={m['target_type']!r}"
                     )
+
+        if self.changed_fields:
+            print(f"\n  Fields with diffs ({len(self.changed_fields)}):")
+            for f in sorted(self.changed_fields):
+                print(f"    {f}")
 
         if self.field_diffs:
             preview = self.field_diffs[:5]

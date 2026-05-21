@@ -2,6 +2,7 @@ import argparse
 import datetime
 import json
 import sys
+import time
 from typing import Dict, Iterator, List, Optional, Set
 
 from .comparator import DEFAULT_EXCLUDE_FIELDS, TypeResolver, build_type_resolver, diff_doc, null_type_resolver
@@ -211,6 +212,7 @@ def cmd_compare(args: argparse.Namespace) -> int:
     state_path = None if getattr(args, "no_checkpoint", False) else args.checkpoint
 
     print("Comparing...")
+    _start = time.monotonic()
     _merge_compare(
         src.iter_docs(),
         tgt.iter_docs(),
@@ -226,7 +228,7 @@ def cmd_compare(args: argparse.Namespace) -> int:
     )
 
     report.save(args.report)
-    report.print_summary(src.label(), tgt.label())
+    report.print_summary(src.label(), tgt.label(), elapsed_seconds=time.monotonic() - _start)
     print(f"  Report saved to: {args.report}")
 
     clean = (
