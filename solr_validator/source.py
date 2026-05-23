@@ -54,6 +54,26 @@ class FileSource(Source):
         self._path = path
         self._resume_from_id = resume_from_id
         self._meta: Dict = {}
+        self._meta_loaded: bool = False
+
+    def _load_meta(self) -> None:
+        """Peek at the first line of the file and cache __meta__ if present."""
+        if self._meta_loaded:
+            return
+        self._meta_loaded = True
+        try:
+            with open(self._path) as fh:
+                first_line = fh.readline()
+        except OSError:
+            return
+        if not first_line:
+            return
+        try:
+            first = json.loads(first_line)
+        except json.JSONDecodeError:
+            return
+        if isinstance(first, dict) and "__meta__" in first:
+            self._meta = first["__meta__"]
 
     def iter_docs(self) -> Iterator[Dict]:
         with open(self._path) as fh:
@@ -63,8 +83,10 @@ class FileSource(Source):
             first = json.loads(first_line)
             if "__meta__" in first:
                 self._meta = first["__meta__"]
+                self._meta_loaded = True
             else:
                 # No meta header; treat the first line as a document
+                self._meta_loaded = True
                 if not self._resume_from_id or first.get("id", "") > self._resume_from_id:
                     yield first
 
@@ -78,6 +100,7 @@ class FileSource(Source):
                 yield doc
 
     def get_doc_count(self) -> Optional[int]:
+        self._load_meta()
         return self._meta.get("doc_count")
 
     def label(self) -> str:
