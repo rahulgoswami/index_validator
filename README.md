@@ -71,6 +71,7 @@ python -m solr_validator [global-flags] snapshot --index NAME --out FILE
 |------|---------|-------------|
 | `--index` | required | Core or collection name |
 | `--out` | required | Output JSONL path |
+| `--exclude-field FIELD` | — | Exclude a field from the snapshot (repeatable) |
 
 The snapshot file starts with a metadata header line and then one JSON object per document, sorted by `id` ascending. This file can be used as a source in `compare`.
 
@@ -93,6 +94,7 @@ Each source is either `index:<name>` or `file:<path>` (a snapshot file).
 | `--checkpoint-interval` | `10000` | Write checkpoint every N events |
 | `--no-checkpoint` | off | Disable checkpointing |
 | `--resume` | off | Resume from last checkpoint |
+| `--exclude-field FIELD` | — | Exclude a field from comparison (repeatable) |
 
 **Resume caveat**: `--resume` restores the progress counter (docs already processed) but not prior findings. The output report will only contain findings from the resumed run onwards. For a complete picture across runs you must merge the reports manually.
 
@@ -111,7 +113,8 @@ python -m solr_validator [global-flags] selftest
 | `--solr` | `http://localhost:8983/solr` | Solr base URL |
 | `--timeout` | `60` | HTTP request timeout in seconds |
 | `--batch-size` | `1000` | cursorMark page size |
-| `--exclude-field FIELD` | — | Exclude a field from comparison (repeatable) |
+
+Global flags must appear **before** the subcommand. Subcommand-specific flags (including `--exclude-field`) appear **after** the subcommand.
 
 The following fields are always excluded: `_version_`, `_root_`, `_nest_path_`, `_nest_parent_`, `_text_`, `_route_`, `score`. `_version_` is guaranteed to differ between any two indexes and would produce only noise.
 
