@@ -262,13 +262,6 @@ def main() -> None:
         dest="batch_size",
         help="cursorMark page size (default: 1000)",
     )
-    parser.add_argument(
-        "--exclude-field",
-        action="append",
-        metavar="FIELD",
-        dest="exclude_field",
-        help="Extra field to exclude from comparison (repeatable)",
-    )
 
     sub = parser.add_subparsers(dest="command", required=True)
 
@@ -279,6 +272,13 @@ def main() -> None:
     )
     sp.add_argument("--index", required=True, help="Index name (core or collection)")
     sp.add_argument("--out", required=True, help="Output JSONL file")
+    sp.add_argument(
+        "--exclude-field",
+        action="append",
+        metavar="FIELD",
+        dest="exclude_field",
+        help="Extra field to exclude from snapshot (repeatable)",
+    )
 
     # ── compare ───────────────────────────────────────────────────────────
     cp = sub.add_parser(
@@ -328,6 +328,13 @@ def main() -> None:
         "--resume",
         action="store_true",
         help="Resume from last checkpoint (reads --checkpoint file)",
+    )
+    cp.add_argument(
+        "--exclude-field",
+        action="append",
+        metavar="FIELD",
+        dest="exclude_field",
+        help="Extra field to exclude from comparison (repeatable)",
     )
 
     # ── selftest ──────────────────────────────────────────────────────────
